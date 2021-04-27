@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
 #include "screen.h"
 #include "lcd.h"
@@ -7,6 +8,8 @@
 
 volatile uint8_t* prev;
 extern volatile uint8_t* memory;
+extern volatile uint8_t* v;
+extern volatile uint16_t pc;
 
 void init_screen() {
     prev = malloc(0xFF * sizeof(uint8_t));
@@ -21,11 +24,22 @@ void draw_screen() {
             unsigned char x = 4 * (((dbii - 0xF00) * 8 + dbk) % 64);
             unsigned char y = 4 * (((dbii - 0xF00) * 8 + dbk) / 64);
             rectangle r = {x, x+3, y, y+3};
-            if ((memory[dbii] >> (7 - dbk)) & 0x01)// && !((prev[dbii - 0xF00] >> (7 - dbk)) & 0x01))
+            if ((memory[dbii] >> (7 - dbk)) & 0x01)
                 fill_rectangle(r, WHITE);
-            else// if (!((memory[dbii] >> (7 - dbk)) & 0x01) && (prev[dbii - 0xF00] >> (7 - dbk)) & 0x01)
+            else
                 fill_rectangle(r, BLACK);
         }
-        //prev[dbii - 0xF00] = memory[dbii];
+    }
+
+    char bbb[16];
+    sprintf(bbb, "%04x", memory[pc]);
+    display.x = 280;
+    display.y = 20;
+    display_string(bbb);
+    for (int tt = 0; tt < 16; tt++) {
+        sprintf(bbb, "%02x: %02x", tt, v[tt]);
+        display.x = 280;
+        display.y += 10;
+        display_string(bbb);
     }
 }

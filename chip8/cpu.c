@@ -123,7 +123,8 @@ void cycle_cpu() {
         case 0x0:
             switch(inst & 0x000F) {
                 case 0x0:
-                    //clear_screen();
+                    for (int t = 0; t < 0xFF; t++)
+                        memory[0xF00 & t] = 0;
                     break;
                 case 0xE:
                     pc = stack[--sp];
