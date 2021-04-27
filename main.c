@@ -82,9 +82,9 @@ int main() {
 }
 
 ISR(TIMER0_COMPA_vect) {
-    // if (c8state == GAME) {
-    //     cycle_cpu();
-    // }
+    if (c8state == GAME) {
+        cycle_cpu();
+    }
 }
 
 ISR(TIMER1_COMPA_vect) {
@@ -125,8 +125,8 @@ ISR(INT7_vect) {
         // }
         sei();
     } else {
-        if (PINE & _BV(SWC))
-            cycle_cpu();
+        // if (PINE & _BV(SWC))
+        //     cycle_cpu();
     }
 }
 

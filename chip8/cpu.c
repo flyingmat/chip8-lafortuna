@@ -99,24 +99,31 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
 
 void cycle_cpu() {
     uint16_t inst = memory[pc] << 8 | memory[pc+1];
-    char bbb[16];
-    sprintf(bbb, "0x%04x", inst);
-    display.x = 280;
-    display.y = 20;
-    display_string(bbb);
-    sprintf(bbb, "%u", delay_timer);
-    display.x = 280;
-    display.y = 40;
-    display_string(bbb);
-    sprintf(bbb, "%u", sound_timer);
-    display.x = 280;
-    display.y = 60;
-    display_string(bbb);
+    // char bbb[16];
+    // sprintf(bbb, "%04x", inst);
+    // display.x = 280;
+    // display.y = 20;
+    // display_string(bbb);
+    // for (int tt = 0; tt < 16; tt++) {
+    //     sprintf(bbb, "%02x: %02x", tt, v[tt]);
+    //     display.x = 280;
+    //     display.y +=10;
+    //     display_string(bbb);
+    // }
+    // sprintf(bbb, "%u", delay_timer);
+    // display.x = 280;
+    // display.y = 40;
+    // display_string(bbb);
+    // sprintf(bbb, "%u", sound_timer);
+    // display.x = 280;
+    // display.y = 60;
+    // display_string(bbb);
     uint8_t x = (inst & 0x0F00) >> 8, y = (inst & 0x00F0) >> 4;
     switch (inst >> 12) {
         case 0x0:
             switch(inst & 0x000F) {
                 case 0x0:
+                    //clear_screen();
                     break;
                 case 0xE:
                     pc = stack[--sp];
@@ -212,25 +219,25 @@ void cycle_cpu() {
             break;
         case 0xF:
             switch (inst & 0x00FF) {
-                case 0x07:
+                case 0x07:    // Fx07 - LD Vx, DT
                     v[x] = delay_timer;
                     break;
-                case 0x0A:
+                case 0x0A:    // Fx0A - LD Vx, K
                     pc -= 2;
                     break;
-                case 0x15:
+                case 0x15:    // Fx15 - LD DT, Vx
                     delay_timer = v[x];
                     break;
-                case 0x18:
+                case 0x18:    // Fx18 - LD ST, Vx
                     sound_timer = v[x];
                     break;
-                case 0x1E:
+                case 0x1E:    // Fx1E - ADD I, Vx
                     i += v[x];
                     break;
-                case 0x29:
+                case 0x29:    // Fx29 - LD F, Vx
                     i = v[x] * 5;
                     break;
-                case 0x33:
+                case 0x33:    // Fx33 - LD B, Vx
                 {   uint8_t vv = v[x];
 
                     memory[i] = 0;
@@ -251,12 +258,12 @@ void cycle_cpu() {
                     }
 
                     break;    }
-                case 0x55:
-                    for (int t = 0; t < 16; t++)
+                case 0x55:    // Fx55 - LD [I], Vx
+                    for (int t = 0; t <= x; t++)
                         memory[i+t] = v[t];
                     break;
-                case 0x65:
-                    for (int t = 0; t < 16; t++)
+                case 0x65:    // Fx65 - LD Vx, [I]
+                    for (int t = 0; t <= x; t++)
                         v[t] = memory[i+t];
                     break;
             }
