@@ -1,7 +1,11 @@
+#include <stdio.h>
 #include "main.h"
 
 volatile int8_t delta;
 volatile enum state c8state = MENU;
+
+volatile uint8_t delay_timer = 0;
+volatile uint8_t sound_timer = 0;
 
 int8_t enc_delta();
 
@@ -26,13 +30,20 @@ void init() {
 	TCCR0B = _BV(CS01)
                | _BV(CS00);   /* F_CPU / 64 */
 
-
-
     /* SET OCR0A FOR A 2 MS PERIOD / 500 Hz */
-	OCR0A = 250;    // 250 * 0.000008 = 0.002s
+    OCR0A = 250;    // 250 * 0.000008 = 0.002s
 
     /* ENABLE TIMER INTERRUPT */
 	TIMSK0 |= _BV(OCIE0A);
+
+    TCCR1A = _BV(WGM11);
+	TCCR1B = _BV(CS12);   /* F_CPU / 256 */
+
+    /* SET OCR1A FOR 60 Hz */
+    OCR1A = 521;    // 521 * 0.000032 ~= 0.0167s
+
+    /* ENABLE TIMER INTERRUPT */
+	TIMSK1 |= _BV(OCIE1A);
 
     init_lcd();
     set_frame_rate_hz(61);
@@ -41,6 +52,7 @@ void init() {
     f_mount(&fs, "", 0);
     init_menu();
 
+    init_screen();
     init_cpu();
 }
 
@@ -54,11 +66,15 @@ int main() {
 
     while (1) {
         if (c8state == MENU) {
+            cli();
             k -= enc_delta();
             if (k < 0)
                 k = 0;
             else if (k >= f_amount)
                 k = f_amount - 1;
+            sei();
+        } else {
+            draw_screen();
         }
     }
 
@@ -66,11 +82,16 @@ int main() {
 }
 
 ISR(TIMER0_COMPA_vect) {
-    cli();
-    if (c8state == GAME) {
-        cycle_cpu();
-    }
-    sei();
+    // if (c8state == GAME) {
+    //     cycle_cpu();
+    // }
+}
+
+ISR(TIMER1_COMPA_vect) {
+    if (delay_timer != 0)
+        delay_timer--;
+    if (sound_timer != 0)
+        sound_timer--;
 }
 
 ISR(INT6_vect) {
@@ -86,9 +107,26 @@ ISR(INT7_vect) {
     if (c8state == MENU) {
         cli();
         k = 0;
-        load_game(files[menu_i]);
+        display.foreground = WHITE;
+        display.background = BLACK;
+        clear_screen();
 
+        load_game(files[menu_i]);
+        c8state = GAME;
+
+        // display.x = 280;
+        // display.y = 20;
+        // for (int t = 0; t < 30; t++) {
+        //     char ss[16];
+        //     sprintf(ss, "0x%02x%02x", memory[0xF00 + t * 2], memory[0xF00 + t * 2 + 1]);
+        //     display_string(ss);
+        //     display.x = 280;
+        //     display.y += 8;
+        // }
         sei();
+    } else {
+        if (PINE & _BV(SWC))
+            cycle_cpu();
     }
 }
 

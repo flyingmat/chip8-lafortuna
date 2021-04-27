@@ -15,5 +15,6 @@ enum state{MENU,GAME};
 #include "lcd.h"
 #include "ui.h"
 #include "cpu.h"
+#include "screen.h"
 
 FATFS fs;

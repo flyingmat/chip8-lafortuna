@@ -3,7 +3,9 @@
  *           View this license at http://creativecommons.org/about/licenses/
  */
  
+#include <avr/io.h>
 #include <stdint.h>
+
 
 #define LCDWIDTH	240
 #define LCDHEIGHT	320
