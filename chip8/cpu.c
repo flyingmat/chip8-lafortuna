@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "ff.h"
 #include "lcd.h"
+#include "input.h"
 
 volatile uint8_t* memory;
 volatile uint16_t* stack;
@@ -13,21 +14,6 @@ volatile uint8_t* v;
 volatile uint16_t i;
 volatile uint16_t pc;
 volatile uint8_t sp;
-
-volatile uint8_t c8font [] = { 0xF0, 0x90, 0x90, 0x90, 0xF0,
-                               0x20, 0x60, 0x20, 0x20, 0x70,
-                               0xF0, 0x10, 0xF0, 0x80, 0xF0,
-                               0xF0, 0x10, 0xF0, 0x10, 0xF0,
-                               0x90, 0x90, 0xF0, 0x10, 0x10,
-                               0xF0, 0x80, 0xF0, 0x10, 0xF0,
-                               0xF0, 0x80, 0xF0, 0x90, 0xF0,
-                               0xF0, 0x10, 0x20, 0x40, 0x40,
-                               0xF0, 0x90, 0xF0, 0x90, 0xF0,
-                               0xF0, 0x90, 0xF0, 0x10, 0xF0,
-                               0xF0, 0x90, 0xF0, 0x90, 0x90,
-                               0xE0, 0x90, 0x90, 0x90, 0xE0,
-                               0xF0, 0x80, 0xF0, 0x80, 0xF0,
-                               0xF0, 0x80, 0xF0, 0x80, 0x80 };
 
 void vmemset(volatile void *s, char c, size_t n) {
     volatile char* p = s;
@@ -38,6 +24,21 @@ void vmemset(volatile void *s, char c, size_t n) {
 void init_cpu() {
     memory = malloc(4096 * sizeof(uint8_t));
     vmemset(memory, 0, 4096 * sizeof(uint8_t));
+
+    uint8_t c8font [] = { 0xF0, 0x90, 0x90, 0x90, 0xF0,
+                          0x20, 0x60, 0x20, 0x20, 0x70,
+                          0xF0, 0x10, 0xF0, 0x80, 0xF0,
+                          0xF0, 0x10, 0xF0, 0x10, 0xF0,
+                          0x90, 0x90, 0xF0, 0x10, 0x10,
+                          0xF0, 0x80, 0xF0, 0x10, 0xF0,
+                          0xF0, 0x80, 0xF0, 0x90, 0xF0,
+                          0xF0, 0x10, 0x20, 0x40, 0x40,
+                          0xF0, 0x90, 0xF0, 0x90, 0xF0,
+                          0xF0, 0x90, 0xF0, 0x10, 0xF0,
+                          0xF0, 0x90, 0xF0, 0x90, 0x90,
+                          0xE0, 0x90, 0x90, 0x90, 0xE0,
+                          0xF0, 0x80, 0xF0, 0x80, 0xF0,
+                          0xF0, 0x80, 0xF0, 0x80, 0x80 };
 
     for (int i = 0; i < 70; i++)
         memory[i] = c8font[i];
@@ -98,33 +99,15 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
 }
 
 void cycle_cpu() {
+    process_input();
     uint16_t inst = memory[pc] << 8 | memory[pc+1];
-    // char bbb[16];
-    // sprintf(bbb, "%04x", inst);
-    // display.x = 280;
-    // display.y = 20;
-    // display_string(bbb);
-    // for (int tt = 0; tt < 16; tt++) {
-    //     sprintf(bbb, "%02x: %02x", tt, v[tt]);
-    //     display.x = 280;
-    //     display.y +=10;
-    //     display_string(bbb);
-    // }
-    // sprintf(bbb, "%u", delay_timer);
-    // display.x = 280;
-    // display.y = 40;
-    // display_string(bbb);
-    // sprintf(bbb, "%u", sound_timer);
-    // display.x = 280;
-    // display.y = 60;
-    // display_string(bbb);
     uint8_t x = (inst & 0x0F00) >> 8, y = (inst & 0x00F0) >> 4;
     switch (inst >> 12) {
         case 0x0:
             switch(inst & 0x000F) {
                 case 0x0:
-                    for (int t = 0; t < 0xFF; t++)
-                        memory[0xF00 & t] = 0;
+                    for (int t = 0; t <= 0xFF; t++)
+                        memory[0xF00 + t] = 0;
                     break;
                 case 0xE:
                     pc = stack[--sp];
@@ -212,9 +195,12 @@ void cycle_cpu() {
         case 0xE:
             switch (inst & 0x000F) {
                 case 0xE:    // Ex9E - SKP Vx
+                    if (c8input & (1 << v[x]))
+                        pc += 2;
                     break;
                 case 0x1:    // ExA1 - SKNP Vx
-                    pc += 2;
+                    if (!(c8input & (1 << v[x])))
+                        pc += 2;
                     break;
             }
             break;
@@ -224,7 +210,15 @@ void cycle_cpu() {
                     v[x] = delay_timer;
                     break;
                 case 0x0A:    // Fx0A - LD Vx, K
-                    pc -= 2;
+                    if (!c8input)
+                        pc -= 2;
+                    else {
+                        for (int t = 0; t < 16; t++) {
+                            if (c8input & (1 << t)) {
+                                v[x] = 1 << t;
+                            }
+                        }
+                    }
                     break;
                 case 0x15:    // Fx15 - LD DT, Vx
                     delay_timer = v[x];

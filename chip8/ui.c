@@ -18,6 +18,8 @@ void draw_menu(unsigned short i) {
         rectangle b = {2, display.width-3, 6 + menu_i * 8, 6 + menu_i * 8 + 7};
         fill_rectangle(b, BLACK);
         menu_i = i;
+    } else {
+        return;
     }
 
     unsigned short c = 0;
@@ -44,7 +46,7 @@ void draw_menu(unsigned short i) {
 void init_menu() {
     files = malloc(sizeof(char*) * MAX_FILES);
     f_amount = 0;
-    menu_i = 0;
+    menu_i = 255;
 
     DIR dir;
     f_opendir(&dir, "");
