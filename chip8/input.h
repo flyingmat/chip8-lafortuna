@@ -30,5 +30,6 @@ extern volatile short k;
 
 void init_input();
 void process_input();
+void scan_encoder();
 
 #endif

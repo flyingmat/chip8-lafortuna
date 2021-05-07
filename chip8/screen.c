@@ -7,35 +7,35 @@
 #include "input.h"
 #include "screen.h"
 
+// void draw_ks(keyset kss) {
+//     char str[4];
+//
+//     switch(kss) {
+//         case KS0123:
+//             str = "0123";
+//             break;
+//         case KS4567:
+//             str = "4567";
+//             break;
+//         case KS89AB:
+//             str = "89AB";
+//             break;
+//         case KSCDEF:
+//             str = "CDEF";
+//             break;
+//     }
+//
+//     if (ks == kss) {
+//         uint16_t inc = c8input >> (4 * kss);
+//         for (uint8_t i = 0; i < 4; i++) {
+//
+//         }
+//     } else {
+//
+//     }
+// }
+
 void draw_screen() {
-    for (uint16_t dbii = 0xF00; dbii <= 0xFFF; dbii++) {
-        for (uint8_t dbk = 0; dbk < 8; dbk++) {
-            display.x = 0;
-            display.y = 0;
-            unsigned char x = 4 * (((dbii - 0xF00) * 8 + dbk) % 64);
-            unsigned char y = 4 * (((dbii - 0xF00) * 8 + dbk) / 64);
-            rectangle r = {x, x+3, y, y+3};
-            if ((memory[dbii] >> (7 - dbk)) & 0x01)
-                fill_rectangle(r, WHITE);
-            else
-                fill_rectangle(r, BLACK);
-        }
-    }
-
-    // display.foreground = WHITE;
-    // display.background = BLACK;
-    // char bbb[16];
-    // sprintf(bbb, "%04x", memory[pc] << 8 | memory[pc+1]);
-    // display.x = 280;
-    // display.y = 20;
-    // display_string(bbb);
-    // for (int tt = 0; tt < 16; tt++) {
-    //     sprintf(bbb, "%02x: %02x", tt, v[tt]);
-    //     display.x = 280;
-    //     display.y += 10;
-    //     display_string(bbb);
-    // }
-
     display.x = 40;
     display.y = 220;
     display.foreground = WHITE;

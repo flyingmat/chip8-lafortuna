@@ -21,9 +21,9 @@ void init_input() {
 	DDRC &= ~_BV(SWN) & ~_BV(SWE) & ~_BV(SWS) & ~_BV(SWW);
 	PORTC |= _BV(SWN) | _BV(SWE) | _BV(SWS) | _BV(SWW);
 
-	EICRB |= _BV(ISC40) | _BV(ISC50) | _BV(ISC70);
+	EICRB |= /*_BV(ISC40) | _BV(ISC50) |*/ _BV(ISC70);
 
-    EIMSK |= _BV(INT4) | _BV(INT5) | _BV(INT7);
+    EIMSK |= /*_BV(INT4) | _BV(INT5) |*/ _BV(INT7);
 }
 
 void process_input() {
@@ -41,7 +41,7 @@ void process_input() {
 	c8input <<= (4 * (uint8_t) ks);
 }
 
-ISR(INT4_vect) {
+void scan_encoder() {
     static int8_t last;
     int8_t new, diff;
     uint8_t wheel;
@@ -74,12 +74,14 @@ ISR(INT4_vect) {
 	        k = f_amount - 1;
 	} else {
 		k %= 4;
+		if (k < 0)
+			k = 4 + k;
 		ks = (enum keyset) (k);
 	}
 
 }
 
-ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
+// ISR(INT5_vect, ISR_ALIASOF(INT4_vect));
 
 ISR(INT7_vect) {
 	if (c8state == MENU) {

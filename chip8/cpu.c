@@ -6,6 +6,7 @@
 #include "cpu.h"
 #include "ff.h"
 #include "lcd.h"
+#include "screen.h"
 #include "input.h"
 
 volatile uint8_t* memory;
@@ -88,10 +89,16 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
         }
 
         for (size_t i = 0; i < 8; i++) {
-            if (((oldmem >> i) & 0x01) && !((newmem >> i) & 0x01)) {
+            if (((oldmem >> i) & 0x01) && !((newmem >> i) & 0x01))
                 setvf = 1;
-                break;
-            }
+
+            uint8_t xs = 4 * (x + i);
+            uint8_t ys = 4 * (y + row);
+
+            // (320 - 256) / 2 = 32    ->    center the emulated display
+            rectangle r = {xs + 32, xs + 3 + 32, ys, ys + 3};
+            if (((oldmem >> (7 - i)) & 0x01) != ((newmem >> (7 - i)) & 0x01))
+                fill_rectangle(r, (newmem >> (7 - i)) & 0x01 ? WHITE : BLACK);
         }
     }
 
@@ -100,14 +107,18 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
 
 void cycle_cpu() {
     process_input();
+    draw_screen();
+
     uint16_t inst = memory[pc] << 8 | memory[pc+1];
     uint8_t x = (inst & 0x0F00) >> 8, y = (inst & 0x00F0) >> 4;
+
     switch (inst >> 12) {
         case 0x0:
             switch(inst & 0x000F) {
                 case 0x0:
                     for (int t = 0; t <= 0xFF; t++)
                         memory[0xF00 + t] = 0;
+                    clear_screen();
                     break;
                 case 0xE:
                     pc = stack[--sp];

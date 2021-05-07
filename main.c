@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "main.h"
 
 volatile uint8_t delay_timer = 0;
@@ -29,7 +28,7 @@ void init() {
     f_mount(&fs, "", 0);
 
     init_lcd();
-    set_frame_rate_hz(61);
+    set_frame_rate_hz(75);
 
     init_menu();
     init_cpu();
@@ -40,10 +39,11 @@ int main() {
     sei();
 
     while (1) {
+        scan_encoder();
+
         if (c8state == MENU) {
             draw_menu(k);
         } else {
-            draw_screen();
         }
     }
 
@@ -52,14 +52,17 @@ int main() {
 
 ISR(TIMER0_COMPA_vect) {
     if (c8state == GAME) {
-        
         cycle_cpu();
     }
 }
 
 ISR(TIMER1_COMPA_vect) {
-    if (delay_timer != 0)
-        delay_timer--;
-    if (sound_timer != 0)
-        sound_timer--;
+    cli();
+    if (c8state == GAME) {
+        if (delay_timer != 0)
+            delay_timer--;
+        if (sound_timer != 0)
+            sound_timer--;
+    }
+    sei();
 }
