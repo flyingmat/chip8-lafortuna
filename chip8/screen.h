@@ -4,6 +4,6 @@
 extern volatile uint8_t* prev;
 
 void init_screen();
-void draw_screen();
+void draw_keyset();
 
 #endif

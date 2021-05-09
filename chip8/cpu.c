@@ -77,6 +77,7 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
         uint8_t newmem;
         uint8_t oldmem;
 
+        // x matches a byte array location, easier to calculate
         if (!(x % 8)) {
             oldmem = memory[memptr];
             newmem = oldmem ^ memory[i + row];
@@ -88,17 +89,21 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
             memory[memptr+1] ^= memory[i + row] << (8 - (x % 8));
         }
 
-        for (size_t i = 0; i < 8; i++) {
-            if (((oldmem >> i) & 0x01) && !((newmem >> i) & 0x01))
-                setvf = 1;
+        for (uint8_t k = 0; k < 8; k++) {
+            // if a pixel is erased, v[f] will be set to 1
+            if (!setvf) {
+                if (((oldmem >> k) & 0x01) && !((newmem >> k) & 0x01))
+                    setvf = 1;
+            }
 
-            uint8_t xs = 4 * (x + i);
+            // each pixel is enlarged 4 times, because of higher ppi
+            uint8_t xs = 4 * (x + k);
             uint8_t ys = 4 * (y + row);
 
             // (320 - 256) / 2 = 32    ->    center the emulated display
             rectangle r = {xs + 32, xs + 3 + 32, ys, ys + 3};
-            if (((oldmem >> (7 - i)) & 0x01) != ((newmem >> (7 - i)) & 0x01))
-                fill_rectangle(r, (newmem >> (7 - i)) & 0x01 ? WHITE : BLACK);
+            if (((oldmem >> (7 - k)) & 0x01) != ((newmem >> (7 - k)) & 0x01))
+                fill_rectangle(r, (newmem >> (7 - k)) & 0x01 ? WHITE : BLACK);
         }
     }
 
@@ -107,7 +112,7 @@ uint8_t draw_sprite(uint8_t x, uint8_t y, uint8_t h) {
 
 void cycle_cpu() {
     process_input();
-    draw_screen();
+    draw_keyset();
 
     uint16_t inst = memory[pc] << 8 | memory[pc+1];
     uint8_t x = (inst & 0x0F00) >> 8, y = (inst & 0x00F0) >> 4;

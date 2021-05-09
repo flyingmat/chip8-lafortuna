@@ -7,35 +7,7 @@
 #include "input.h"
 #include "screen.h"
 
-// void draw_ks(keyset kss) {
-//     char str[4];
-//
-//     switch(kss) {
-//         case KS0123:
-//             str = "0123";
-//             break;
-//         case KS4567:
-//             str = "4567";
-//             break;
-//         case KS89AB:
-//             str = "89AB";
-//             break;
-//         case KSCDEF:
-//             str = "CDEF";
-//             break;
-//     }
-//
-//     if (ks == kss) {
-//         uint16_t inc = c8input >> (4 * kss);
-//         for (uint8_t i = 0; i < 4; i++) {
-//
-//         }
-//     } else {
-//
-//     }
-// }
-
-void draw_screen() {
+void draw_keyset() {
     display.x = 40;
     display.y = 220;
     display.foreground = WHITE;

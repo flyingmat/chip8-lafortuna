@@ -51,9 +51,11 @@ int main() {
 }
 
 ISR(TIMER0_COMPA_vect) {
+    cli();
     if (c8state == GAME) {
         cycle_cpu();
     }
+    sei();
 }
 
 ISR(TIMER1_COMPA_vect) {
